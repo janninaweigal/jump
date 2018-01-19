@@ -1,5 +1,6 @@
 # jump
 跳一跳python2.7+webkit版本源码+exe
+
 一、软件说明
 1，基于python2.7和webkit的Windows应用程序。
 2，手工操作，非全自动。
