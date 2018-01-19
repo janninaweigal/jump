@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>clip</title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        ul {
+            list-style-type: none;
+            overflow: hidden;
+            zoom: 1;
+            width: 1000px;
+            margin: 30px auto;
+        }
+
+        li {
+            float: left;
+            width: 500px;
+        }
+
+        #container {
+            height: 600px;
+            /*max-width: 100%;*/
+            /*max-height: 100%;*/
+            text-align: center;
+            font-size: 0;
+            background-size: cover;
+
+            width: 100%;
+            margin: 0 auto;
+            border: 1px solid #999;
+            position: relative;
+            /*background: url("file:///D://screen.png");*/
+
+        }
+
+        #container .block {
+            height: 100px;
+            width: 100px;
+            border: 1px solid #000000;
+            position: absolute;
+            left: 50px;
+            top: 50px;
+            background: #fff;
+            filter: alpha(opacity=30);
+            opacity: 0.3;
+            cursor: move;
+        }
+
+        #container .tips {
+            position: absolute;
+            padding: 5px;
+            border: 1px solid #ccc;
+            background: #fff;
+            filter: alpha(opacity=60);
+            opacity: 0.6;
+            display: none;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .tips span {
+            display: inline-block;
+            zoom: 1;
+            width: 28px;
+        }
+
+        .rRightDown, .rLeftDown, .rLeftUp, .rRightUp, .rRight, .rLeft, .rUp, .rDown {
+            position: absolute;
+            background: #f00;
+            width: 6px;
+            height: 6px;
+            z-index: 5;
+            font-size: 0;
+        }
+
+        .rLeftDown, .rRightUp {
+            cursor: ne-resize;
+        }
+
+        .rRightDown, .rLeftUp {
+            cursor: nw-resize;
+        }
+
+        .rRight, .rLeft {
+            cursor: e-resize;
+        }
+
+        .rUp, .rDown {
+            cursor: n-resize;
+        }
+
+        .rRightDown {
+            bottom: -3px;
+            right: -3px;
+        }
+
+        .rLeftDown {
+            bottom: -3px;
+            left: -3px;
+        }
+
+        .rRightUp {
+            top: -3px;
+            right: -3px;
+        }
+
+        .rLeftUp {
+            top: -3px;
+            left: -3px;
+        }
+
+        .rRight {
+            right: -3px;
+            top: 50%
+        }
+
+        .rLeft {
+            left: -3px;
+            top: 50%
+        }
+
+        .rUp {
+            top: -3px;
+            left: 50%
+        }
+
+        .rDown {
+            bottom: -3px;
+            left: 50%
+        }
+
+        #imgC {
+            border: 1px solid #CCC;
+            width: 62px;
+            text-align: center;
+            font-size: 0;
+            position: relative;
+            margin: 0 auto;
+            display: none;
+            /*background: url(http://images.cnblogs.com/cnblogs_com/wtcsy/192373/r_xx.jpg);*/
+            background: url("D://screen.png");
+        }
+
+        .code {
+            background: none repeat scroll 0 0 #E3F4F9;
+            border: 1px solid #BAE2F0;
+            font: 12px "Courier New", Courier, monospace;
+            margin: 30px auto;
+            padding: 10px 10px 40px;
+            width: 980px;
+        }
+
+        .code p {
+            height: 24px;
+            line-height: 24px;
+        }
+
+        .code span {
+            display: inline-block;
+            zoom: 1;
+            margin-right: 5px;
+            width: 85px;
+            font-weight: bold;
+            color: #00F
+        }
+    </style>
+</head>
+<body>
+<div class="code">
+    <div class="how">输入比例:<input type="text" id="scale_id"/>
+        <button onclick="confirm_scale();">确定比例</button>
+    </div>
+    <div class="how">
+        <button onclick="_loadImg();">获取新图片</button>
+    </div>
+    <button onclick="_jump();">信仰一跃</button>
+</div>
+<ul>
+    <li>
+        <div id="container"></div>
+    </li>
+    <li>
+        <div id="imgC"></div>
+    </li>
+</ul>
+<!--<script type="text/javascript" src="http://common.cnblogs.com/script/jquery.js"></script>-->
+<script type="text/javascript" src="jquery.min.js"></script>
+-->
+<script type="text/javascript">
+    (function doAll() {
+        var dBody = document.body,
+                dDoc = document.documentElement,
+                ie = $.browser.msie;
+        ie && ($.browser.version == "6.0")
+        && document.execCommand("BackgroundImageCache", false, true);
+        var clip = function (options) {
+            this.init.call(this, options);
+        };
+        clip.prototype = {
+            options: {
+                moveCallBack: function () {
+                },
+                blockClass: "block",
+                tipsClass: "tips"
+            },
+            init: function (options) {
+                $.extend(this, this.options, options || {});
+                if (!this.container || !this.imgC) {
+                    return;
+                }
+                this.container = $(this.container);
+                var self = this;
+                this.block = $('<div class="' + this.blockClass + '">\
+     <div action="rightDown" class="rRightDown"></div>\
+     <div action="leftDown" class="rLeftDown"></div>\
+     <div action="rightUp" class="rRightUp"></div>\
+     <div action="leftUp" class="rLeftUp"></div>\
+     <div action="right" class="rRight"></div>\
+     <div action="left" class="rLeft"></div>\
+     <div action="up" class="rUp"></div>\
+     <div action="down" class="rDown" ></div>\
+       </div>')
+                        .bind("mousedown.r", function (e) {
+                            self.start(e)
+                        })
+                        .appendTo(this.container[0]);
+                this.tips = $('<span class="' + this.tipsClass + '" />').appendTo(this.container[0]);
+                this.setImg();
+            },
+            setImg: function () {
+                var block = this.block;
+                var left = block.css("left"),
+                        top = block.css("top"),
+                        height = block.height(),
+                        width = block.width();
+                this.imgC.css({
+                    height: height,
+                    width: width,
+                    "background-position": "-" + left + " -" + top
+                });
+                this.tips.html("left:<span>" + parseInt(left) + "</span>top:<span>" + +parseInt(top) + "</span>width:<span>" + width + "</span>height:<span>" + height + "</span>");
+            },
+            start: function (e) {
+                var $elem = $(e.target),
+                        block = this.block,
+                        self = this,
+                        move = false,
+                        container = this.container,
+                        action = $elem.attr("action");
+                //这个 每次都要计算 基本dom结构的改变 浏览器的缩放 都会让里面的值发生改变
+                this.offset = $.extend({height: container.height(), width: container.width()}, container.offset());
+                this.blockOriginal = {height: block.height(), width: block.width(), left: parseInt(block.css("left")), top: parseInt(block.css("top"))};
+                if (action) {
+                    this.fun = this[action];
+                } else {
+                    this.x = e.clientX - this.offset.left - this.blockOriginal.left;
+                    this.y = e.clientY - this.offset.top - this.blockOriginal.top;
+                    move = true;
+                }
+                ie
+                && this.block[0].setCapture();
+                this.tips.show();
+                $(document)
+                        .bind("mousemove.r", function (e) {
+                            self.move(e, move)
+                        })
+                        .bind("mouseup.r", function () {
+                            self.end()
+                        });
+            },
+            end: function () {
+                $(document)
+                        .unbind("mousemove.r")
+                        .unbind("mouseup.r");
+                ie
+                && this.block[0].releaseCapture();
+                this.tips.hide();
+            },
+            move: function (e, isMove) {
+                window.getSelection
+                        ? window.getSelection().removeAllRanges()
+                        : document.selection.empty();
+
+                var block = this.block;
+                if (isMove) {
+                    var left = Math.max(0, e.clientX - this.offset.left - this.x);
+                    left = Math.min(left, this.offset.width - this.blockOriginal.width);
+                    var top = Math.max(0, e.clientY - this.offset.top - this.y);
+                    top = Math.min(top, this.offset.height - this.blockOriginal.height);
+                    block.css({left: left, top: top});
+                } else {
+                    var offset = this.fun(e);
+                    block.css(offset);
+                }
+
+                this.setImg();
+                this.moveCallBack();
+            },
+            down: function (e) {
+                var blockOriginal = this.blockOriginal,
+                        sTop = Math.max(dBody.scrollTop, dDoc.scrollTop), //出现垂直方向滚动条时候 要计算这个
+                        offset = this.offset;
+
+                if (e.clientY - offset.top >= blockOriginal.top - sTop) {
+                    var height = Math.min(offset.height - blockOriginal.top, e.clientY - offset.top - blockOriginal.top + sTop),
+                            top = blockOriginal.top;
+                } else {
+                    var height = Math.min(offset.top + blockOriginal.top - e.clientY - sTop, blockOriginal.top),
+                            top = Math.max(e.clientY - offset.top + sTop, 0);
+                }
+                return {height: height, top: top};
+            },
+            up: function (e) {
+                var blockOriginal = this.blockOriginal,
+                        sTop = Math.max(dBody.scrollTop, dDoc.scrollTop),
+                        offset = this.offset;
+                if (e.clientY - offset.top - blockOriginal.height <= blockOriginal.top - sTop) {
+                    var top = Math.max(e.clientY - offset.top + sTop, 0),
+                            maxHeight = blockOriginal.top + blockOriginal.height,
+                            height = Math.min(maxHeight, blockOriginal.top + blockOriginal.height - (e.clientY - offset.top) - sTop);
+                } else {
+                    var height = Math.min(e.clientY - offset.top - blockOriginal.top - blockOriginal.height + sTop, offset.height - blockOriginal.top - blockOriginal.height),
+                            top = blockOriginal.top + blockOriginal.height;
+                }
+                return {height: height, top: top};
+            },
+            left: function (e) {
+                var blockOriginal = this.blockOriginal,
+                        offset = this.offset;
+
+                if (e.clientX - offset.left - blockOriginal.width - blockOriginal.left <= 0) {
+                    var left = Math.max(e.clientX - offset.left, 0),
+                            width = Math.min(blockOriginal.left + blockOriginal.width, blockOriginal.left + blockOriginal.width - (e.clientX - offset.left));
+                } else {
+                    var width = Math.min(e.clientX - offset.left - blockOriginal.left - blockOriginal.width, offset.width - blockOriginal.left - blockOriginal.width),
+                            left = blockOriginal.left + blockOriginal.width;
+                }
+                return {left: left, width: width};
+            },
+            right: function (e) {
+                var blockOriginal = this.blockOriginal,
+                        offset = this.offset;
+                if (e.clientX - offset.left >= blockOriginal.left) {
+                    var width = Math.min(offset.width - blockOriginal.left, e.clientX - offset.left - blockOriginal.left),
+                            left = blockOriginal.left;
+                } else {
+                    var width = Math.min(offset.left + blockOriginal.left - e.clientX, blockOriginal.left),
+                            left = Math.max(e.clientX - offset.left, 0);
+                }
+                return {left: left, width: width};
+            },
+            rightDown: function (e) {
+                return $.extend(this.right(e), this.down(e));
+            },
+            leftDown: function (e) {
+                return $.extend(this.left(e), this.down(e));
+            },
+            rightUp: function (e) {
+                return $.extend(this.right(e), this.up(e));
+            },
+            leftUp: function (e) {
+                return $.extend(this.left(e), this.up(e));
+            },
+            getValue: function () {
+                var block = this.block;
+                return {
+                    left: parseInt(block.css("left")),
+                    top: parseInt(block.css("top")),
+                    width: block.width(),
+                    height: block.height()
+                }
+            }
+        };
+        $.fn.clip = function (options) {
+            options.container = this;
+            return new clip(options);
+        }
+    })();
+    var xx = $("#container").clip({
+        imgC: $("#imgC")
+    });
+</script>
+<script>
+    var _scale = 2.8;
+    function buttonClick() {
+        $("#container").clip("buttonClick()");
+    }
+    function _loadImg() {
+        var ret = python.find_new_img();
+        if (ret.indexOf("screen") > 0) {
+            var url = 'url("' + ret + '")';
+            $("#container").css("background", url);
+        } else {
+            alert(ret);
+        }
+
+    }
+    function _jump() {
+        var s = $('.block');
+        var h = s[0].clientHeight;
+        var w = s[0].clientWidth;
+        var sum = Math.pow(h, 2) + Math.pow(w, 2);
+        var r = Math.sqrt(sum);
+        var run = r * _scale;
+        run = Math.round(run);
+        alert(run);
+        python.op_run(run);
+    }
+    function confirm_scale() {
+        _scale = $("#scale_id").val();
+        alert(_scale);
+    }
+</script>
+</body>
+</html>
